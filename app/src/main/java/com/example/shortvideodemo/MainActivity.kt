@@ -137,8 +137,9 @@ class MainActivity : AppCompatActivity() {
     ) {
         // list.layoutManager = LinearLayoutManager(list.context, LinearLayoutManager.VERTICAL, false)
         list.layoutManager = GridLayoutManager(list.context, 2)
+        val header = VideoLoadStateAdapter { adapter.retry() }
         list.adapter = adapter.withLoadStateHeaderAndFooter(
-            header = VideoLoadStateAdapter { adapter.retry() },
+            header = header,
             footer = VideoLoadStateAdapter { adapter.retry() }
         )
 
@@ -154,14 +155,21 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             adapter.loadStateFlow.collect { loadState ->
+                // TODO: refactor to support remote mediator loadstate as well
+
+                header.loadState = loadState.mediator
+                    ?.refresh
+                    ?.takeIf { it is LoadState.Error && adapter.itemCount == 0 }
+                    ?: loadState.prepend
+
                 val isListEmpty =
                     loadState.refresh is LoadState.NotLoading && adapter.itemCount == 0
 
                 emptyList.isVisible = isListEmpty
-                list.isVisible = !isListEmpty
+                list.isVisible = loadState.source.refresh is LoadState.NotLoading || loadState.mediator?.refresh is LoadState.NotLoading
 
-                progressBar.isVisible = loadState.source.refresh is LoadState.Loading
-                retryButton.isVisible = loadState.source.refresh is LoadState.Error
+                progressBar.isVisible = loadState.mediator?.refresh is LoadState.Loading
+                retryButton.isVisible = loadState.mediator?.refresh is LoadState.Error && adapter.itemCount == 0
 
                 val errorState = loadState.source.append as? LoadState.Error
                     ?: loadState.source.prepend as? LoadState.Error

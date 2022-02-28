@@ -5,6 +5,7 @@ import com.example.shortvideodemo.utils.ByteUnit
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultAllocator
@@ -32,6 +33,8 @@ object ExoPlayerFactory {
             .setBandwidthMeter(bandwidthMeter)
             .setLoadControl(loadControl)
             .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(LocalCacheDataSourceFactory(context, SimpleCacheProvider.provide(context))))
+//            .setMediaSourceFactory(LocalCacheDataSourceFactory(context, SimpleCacheProvider.provide(context)))
             .build().apply {
             playWhenReady = true
             repeatMode = Player.REPEAT_MODE_ALL

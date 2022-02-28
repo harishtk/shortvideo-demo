@@ -4,7 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.18489583333333334" />
+        <entry key="app/src/main/res/layout/activity_playback.xml" value="0.14739583333333334" />
         <entry key="app/src/main/res/layout/activity_post.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/fragment_video.xml" value="0.14739583333333334" />
         <entry key="app/src/main/res/layout/item_video.xml" value="0.17553191489361702" />
         <entry key="app/src/main/res/layout/video_load_state_footer_view_item.xml" value="0.3582427536231884" />
       </map>

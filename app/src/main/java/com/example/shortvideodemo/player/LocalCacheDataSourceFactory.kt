@@ -3,12 +3,7 @@ package com.example.shortvideodemo.player
 import android.content.Context
 import com.example.shortvideodemo.ui.CACHE_DIR
 import com.example.shortvideodemo.ui.MAX_VIDEO_CACHE_SIZE_MB
-import com.example.shortvideodemo.utils.ByteUnit
-import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelectionUtil
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.upstream.cache.CacheDataSink
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
@@ -25,8 +20,12 @@ class LocalCacheDataSourceFactory @Inject constructor(
     private val defaultDataSourceFactory: DefaultDataSource.Factory
 
     private val cacheDataSink: CacheDataSink = CacheDataSink(simpleCache, MAX_VIDEO_CACHE_SIZE_MB)
-    private val fileDataSource: FileDataSource = FileDataSource()
+    private val cacheDataSinkFactory: CacheDataSink.Factory = CacheDataSink.Factory()
+        .setCache(simpleCache)
+        .setBufferSize(MAX_VIDEO_CACHE_SIZE_MB.toInt())
+    private val fileDataSourceFactory: FileDataSource.Factory = FileDataSource.Factory()
 
+    private val cacheDataSourceFactory: CacheDataSource.Factory
     init {
         val userAgent = "Demo"
 
@@ -34,14 +33,17 @@ class LocalCacheDataSourceFactory @Inject constructor(
             this.context,
             DefaultHttpDataSource.Factory()
         )
+
+        cacheDataSourceFactory = CacheDataSource.Factory()
+            .setCache(simpleCache)
+            .setUpstreamDataSourceFactory(defaultDataSourceFactory)
+            .setCacheReadDataSourceFactory(fileDataSourceFactory)
+            .setCacheWriteDataSinkFactory(cacheDataSinkFactory)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
     }
 
     override fun createDataSource(): DataSource {
-        return CacheDataSource(
-            simpleCache, defaultDataSourceFactory.createDataSource(),
-            fileDataSource, cacheDataSink,
-            CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR, null
-        )
+        return cacheDataSourceFactory.createDataSource()
     }
 }
 

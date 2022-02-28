@@ -2,6 +2,7 @@ package com.example.shortvideodemo.ui
 
 import android.content.Context
 import android.media.Image
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
@@ -19,6 +20,7 @@ import com.example.shortvideodemo.player.LocalCacheDataSourceFactory
 import com.example.shortvideodemo.player.SimpleCacheProvider
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.upstream.cache.CacheWriter
 import timber.log.Timber
 import java.lang.Exception
 
@@ -29,6 +31,7 @@ class VideoAdapter(
     private val preview: Boolean = false
 ) : PagingDataAdapter<UiModel, RecyclerView.ViewHolder>(UI_MODEL_COMPARATOR), PlayStateCallback {
 
+    // Manual player injection
     private val player = ExoPlayerFactory.providePlayer(context)
 
     companion object {
@@ -170,27 +173,10 @@ class VideoViewHolder(
             binding.fileTypeIndicator.isVisible = false
             binding.playerView.isVisible = true
 
-            /*val cacheEvictor = LeastRecentlyUsedCacheEvictor(MAX_VIDEO_CACHE_SIZE_MB)
-            val databaseProvider = StandaloneDatabaseProvider(context)
-            val cache = SimpleCache(File(context.cacheDir, CACHE_DIR),
-                cacheEvictor, databaseProvider)
-            val upstreamFactory = DefaultDataSource.Factory(context)
-            val cacheDataSourceFactory = CacheDataSource.Factory().apply {
-                setCache(cache)
-                setUpstreamDataSourceFactory(upstreamFactory)
-                setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE or
-                        CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-            }
-
-            val mediaSourceFactory: MediaSource.Factory =
-                DefaultMediaSourceFactory(cacheDataSourceFactory)*/
-            //.setAdsLoaderProvider(adsLoaderProvider)
-            //.setAdViewProvider(playerView)
-
             // Manual simple cache injection
             val mediaSource = ProgressiveMediaSource.Factory(
                 LocalCacheDataSourceFactory(context, SimpleCacheProvider.provide(context))
-            ).createMediaSource(MediaItem.fromUri(videoData.file))
+            ).createMediaSource(MediaItem.fromUri(Uri.parse(videoData.file)))
 
             player.setMediaSource(mediaSource)
             player.prepare()
