@@ -66,7 +66,7 @@ class VideoPreloadingWorker(
                     val downloadPercentage: Double = (bytesCached * 100.0
                             / requestLength)
 
-                    Log.d(TAG, "downloadPercentage $downloadPercentage videoUri: $videoUri")
+                    // Log.d(TAG, "downloadPercentage $downloadPercentage videoUri: $videoUri")
                 }
             cacheVideo(dataSpec, progressListener)
             return preCacheVideo(videosList)

@@ -156,20 +156,14 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             adapter.loadStateFlow.collect { loadState ->
                 // TODO: refactor to support remote mediator loadstate as well
-
-                header.loadState = loadState.mediator
-                    ?.refresh
-                    ?.takeIf { it is LoadState.Error && adapter.itemCount == 0 }
-                    ?: loadState.prepend
-
                 val isListEmpty =
                     loadState.refresh is LoadState.NotLoading && adapter.itemCount == 0
 
                 emptyList.isVisible = isListEmpty
-                list.isVisible = loadState.source.refresh is LoadState.NotLoading || loadState.mediator?.refresh is LoadState.NotLoading
+                list.isVisible = !isListEmpty
 
-                progressBar.isVisible = loadState.mediator?.refresh is LoadState.Loading
-                retryButton.isVisible = loadState.mediator?.refresh is LoadState.Error && adapter.itemCount == 0
+                progressBar.isVisible = loadState.source.refresh is LoadState.Loading
+                retryButton.isVisible = loadState.source.refresh is LoadState.Error
 
                 val errorState = loadState.source.append as? LoadState.Error
                     ?: loadState.source.prepend as? LoadState.Error
