@@ -7,14 +7,15 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.paging.PagingData
-import androidx.paging.filter
-import androidx.paging.map
 import androidx.recyclerview.widget.*
 import androidx.work.WorkManager
+import com.example.shortvideodemo.data.Result
+import com.example.shortvideodemo.data.succeeded
 import com.example.shortvideodemo.databinding.ActivityMainBinding
 import com.example.shortvideodemo.ui.PlayStateCallback
 import com.example.shortvideodemo.ui.VideoAdapter
@@ -101,7 +102,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 startActivity(intent)
             },
-            preview = true
+            preview = true,
+            onItemLongClick = {
+                confirmDelete(it, accept)
+            }
         )
 
         lifecycleScope.launch {
@@ -119,6 +123,36 @@ class MainActivity : AppCompatActivity() {
             pagingVideoDataFlow = pagingVideoDataFlow,
             accept = accept
         )
+    }
+
+    private fun confirmDelete(uiModel: UiModel, accept: (UiAction) -> Unit) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete this item?")
+            .setMessage("$uiModel")
+            .setPositiveButton("YES") { dialog, _ ->
+                deleteItem(uiModel, accept)
+                dialog.dismiss()
+            }
+            .setNegativeButton("CANCEL") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun deleteItem(uiModel: UiModel, accept: (UiAction) -> Unit) {
+        lifecycleScope.launch {
+            viewModel.delete(uiModel).collectLatest { result ->
+                Timber.d("Delete: $result")
+                when (result) {
+                    is Result.Error -> { Timber.e(result.exception) }
+                    Result.Loading -> {}
+                    is Result.Success -> {
+                        Toast.makeText(this@MainActivity, "Item deleted", Toast.LENGTH_SHORT).show()
+                        accept(UiAction.Refresh)
+                    }
+                }
+            }
+        }
     }
 
     private fun precache(videoUrls: List<String>) {
@@ -156,13 +190,19 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             adapter.loadStateFlow.collect { loadState ->
                 // TODO: refactor to support remote mediator loadstate as well
+
+                /*header.loadState = loadState.mediator
+                    ?.refresh
+                    ?.takeIf { it is LoadState.Error && adapter.itemCount > 0 }
+                    ?: loadState.prepend*/
+
                 val isListEmpty =
                     loadState.refresh is LoadState.NotLoading && adapter.itemCount == 0
 
                 emptyList.isVisible = isListEmpty
                 list.isVisible = !isListEmpty
 
-                progressBar.isVisible = loadState.mediator?.refresh is LoadState.Loading
+                progressBar.isVisible = loadState./*mediator?.*/refresh is LoadState.Loading && adapter.itemCount == 0
                 retryButton.isVisible = loadState.source.refresh is LoadState.Error
 
                 val errorState = loadState.source.append as? LoadState.Error
@@ -177,7 +217,7 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 }
 
-                if (loadState.refresh is LoadState.NotLoading) {
+                if (loadState.source.refresh is LoadState.NotLoading) {
                     if (swipeRefresh.isRefreshing) swipeRefresh.isRefreshing = false
                     val videoUrls = adapter.snapshot().items
                         .filterIsInstance<UiModel.VideoItemModel>()

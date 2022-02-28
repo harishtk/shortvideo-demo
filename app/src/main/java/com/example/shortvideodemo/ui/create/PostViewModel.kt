@@ -35,6 +35,8 @@ class PostViewModel @Inject constructor(
 
     val action: (UiAction) -> Unit
 
+    val uploadProgressFlow = MutableSharedFlow<Int>(5)
+
     init {
         val actionStateFlow = MutableSharedFlow<UiAction>()
 
@@ -71,7 +73,6 @@ class PostViewModel @Inject constructor(
     fun uploadItem(
         context: Context,
         uri: Uri,
-        progress: (Int) -> Unit,
         successContinuation: (UploaderResponse) -> Unit
     ) {
         viewModelScope.launch {
@@ -90,7 +91,7 @@ class PostViewModel @Inject constructor(
                     mimeType,
                     object : ProgressRequestBody.ProgressCallback {
                         override fun onProgressUpdate(percentage: Int) {
-                            progress(percentage)
+                            uploadProgressFlow.tryEmit(percentage)
                         }
 
                         override fun onError() {
@@ -99,11 +100,6 @@ class PostViewModel @Inject constructor(
                     }
                 )
 
-                val countingBody =
-                    CountingRequestBody(progressRequestBody) { bytesWritten, contentLength ->
-                        val progress = 1.0 * bytesWritten / contentLength
-                        progress(progress.toInt())
-                    }
                 val body: MultipartBody.Part =
                     MultipartBody.Part.createFormData(
                         "fileToUpload",
@@ -113,6 +109,7 @@ class PostViewModel @Inject constructor(
                 val response = repository.upload(body = body)
                 Timber.d("Upload Response: $response")
                 cachedFile.delete()
+                uploadProgressFlow.tryEmit(-1)
                 response
             }
             result.fold(

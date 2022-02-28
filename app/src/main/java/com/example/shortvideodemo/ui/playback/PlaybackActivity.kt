@@ -1,6 +1,7 @@
 package com.example.shortvideodemo.ui.playback
 
 import android.os.Bundle
+import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
 import com.example.shortvideodemo.databinding.ActivityPlaybackBinding
 import com.google.android.material.tabs.TabLayoutMediator
@@ -27,7 +28,8 @@ class PlaybackActivity : FragmentActivity() {
         pager.adapter = adapter
 
         TabLayoutMediator(tabs, pager) { tab, position ->
-            tab.text = "Frg $position"
+            tab.text = "VDO $position"
         }.attach()
+        tabs.isVisible = false
     }
 }

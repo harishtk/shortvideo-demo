@@ -17,6 +17,8 @@ import com.example.shortvideodemo.utils.FileUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.lang.UnsupportedOperationException
@@ -30,6 +32,8 @@ class PostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPostBinding
 
+    private var isUploading = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPostBinding.inflate(layoutInflater)
@@ -39,6 +43,22 @@ class PostActivity : AppCompatActivity() {
             events = viewModel.events,
             uiAction = viewModel.action
         )
+
+        lifecycleScope.launch {
+            viewModel.uploadProgressFlow
+                .distinctUntilChanged()
+                .debounce(150)
+                .collectLatest { progress ->
+                    Timber.d("Progress: $progress")
+                    if (progress > 0) {
+                        binding.progressContainer.isVisible = true
+                        binding.linearProgress.isIndeterminate = false
+                        binding.linearProgress.progress = progress
+                    } else {
+                        binding.progressContainer.isVisible = false
+                    }
+                }
+        }
 
         initLaunchers()
         setResult(RESULT_CANCELED)
@@ -85,20 +105,16 @@ class PostActivity : AppCompatActivity() {
                         show()
                     }
                 } else {
+                    isUploading = true
+                    binding.uploadImage.isEnabled = !isUploading
+                    binding.uploadVideo.isEnabled = !isUploading
                     viewModel.uploadItem(
                         context = this,
                         uri = uri,
-                        progress = { progress ->
-                            Timber.d("Progress: $progress")
-                            if (progress > 0) {
-                                binding.progressContainer.isVisible = true
-                                binding.linearProgress.isIndeterminate = false
-                                binding.linearProgress.progress = progress
-                            } else {
-                                binding.progressContainer.isVisible = false
-                            }
-                        },
                         successContinuation = { response ->
+                            isUploading = false
+                            binding.uploadImage.isEnabled = !isUploading
+                            binding.uploadVideo.isEnabled = !isUploading
                             binding.progressContainer.isVisible = false
                             if (response.statusCode == HttpsURLConnection.HTTP_OK) {
                                 setResult(RESULT_OK)
@@ -117,6 +133,14 @@ class PostActivity : AppCompatActivity() {
                     )
                 }
             }
+        }
+    }
+
+    override fun onBackPressed() {
+        if (isUploading) {
+            Toast.makeText(this, "Please wait while uploading", Toast.LENGTH_SHORT).show()
+        } else {
+            super.onBackPressed()
         }
     }
 }

@@ -8,9 +8,12 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
 import androidx.work.WorkManager
+import com.example.shortvideodemo.data.Result
 import com.example.shortvideodemo.data.entity.FILE_TYPE_IMAGE
 import com.example.shortvideodemo.data.entity.VideoData
 import com.example.shortvideodemo.data.repository.DefaultRepository
+import com.example.shortvideodemo.data.source.remote.model.BasicResponse
+import com.example.shortvideodemo.data.source.remote.model.DeleteRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -80,6 +83,16 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
+
+    fun delete(uiModel: UiModel): Flow<Result<BasicResponse>> {
+        val request = DeleteRequest(
+            when (uiModel) {
+                is UiModel.ImageItemModel -> { uiModel.videoData.id }
+                is UiModel.VideoItemModel -> { uiModel.videoData.id }
+            }
+        )
+        return repository.delete(request)
+    }
 }
 
 sealed class UiModel {

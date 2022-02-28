@@ -13,13 +13,15 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 
 object ExoPlayerFactory {
 
+    const val BUFFER_SEGMENT_SIZE = 64 * 1024
+
     fun providePlayer(context: Context): ExoPlayer {
         val bandwidthMeter = DefaultBandwidthMeter.Builder(context).build()
         val trackSelectionFactory = AdaptiveTrackSelection.Factory()
         val trackSelector = DefaultTrackSelector(context, trackSelectionFactory)
 
         val loadControl = DefaultLoadControl.Builder()
-            .setAllocator(DefaultAllocator(true, 5000))
+            .setAllocator(DefaultAllocator(true, BUFFER_SEGMENT_SIZE))
             .setBufferDurationsMs(
                 5 * 1000, // this is it!
                 10 * 1000,

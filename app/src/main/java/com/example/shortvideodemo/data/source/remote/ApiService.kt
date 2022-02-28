@@ -1,8 +1,6 @@
 package com.example.shortvideodemo.data.source.remote
 
-import com.example.shortvideodemo.data.source.remote.model.SelectRequest
-import com.example.shortvideodemo.data.source.remote.model.SelectResponse
-import com.example.shortvideodemo.data.source.remote.model.UploaderResponse
+import com.example.shortvideodemo.data.source.remote.model.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import org.json.JSONObject
@@ -26,7 +24,7 @@ interface ApiService {
 
     @Headers("Content-Type: application/json")
     @POST("delete.php")
-    suspend fun delete(@Body requestBody: RequestBody): JSONObject
+    suspend fun delete(@Body requestBody: DeleteRequest): BasicResponse
 
     companion object {
         private const val BASE_URL = "https://nextgenerationsocialnetwork.com"

@@ -131,9 +131,8 @@ class VideoFragment(
                         }
                     }
                     Timber.d("Clicked: $position")
-                    if (position != -1) {
+                    if (position != -1 && position > 0) {
                         list.scrollToPosition(position)
-                        list.post {  }
                     }
                 }
             }

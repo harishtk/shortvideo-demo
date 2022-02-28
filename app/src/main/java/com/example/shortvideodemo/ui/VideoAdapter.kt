@@ -28,7 +28,8 @@ class VideoAdapter(
     private val context: Context,
     private val playStateCallback: PlayStateCallback,
     private val onItemClick: (UiModel) -> Unit,
-    private val preview: Boolean = false
+    private val preview: Boolean = false,
+    private val onItemLongClick: ((UiModel) -> Unit)? = null
 ) : PagingDataAdapter<UiModel, RecyclerView.ViewHolder>(UI_MODEL_COMPARATOR), PlayStateCallback {
 
     // Manual player injection
@@ -80,10 +81,22 @@ class VideoAdapter(
         return if (viewType == R.layout.item_video) {
             VideoViewHolder.from(parent = parent, player).also { vh ->
                 vh.itemView.setOnClickListener { onItemClick(getItem(vh.bindingAdapterPosition)!!) }
+                onItemLongClick?.let {
+                    vh.itemView.setOnLongClickListener {
+                        it(getItem(vh.bindingAdapterPosition)!!)
+                        true
+                    }
+                }
             }
         } else if (viewType == R.layout.item_image) {
             ImageViewHolder.from(parent = parent).also { vh ->
                 vh.itemView.setOnClickListener { onItemClick(getItem(vh.bindingAdapterPosition)!!) }
+                onItemLongClick?.let {
+                    vh.itemView.setOnLongClickListener {
+                        it(getItem(vh.bindingAdapterPosition)!!)
+                        true
+                    }
+                }
             }
         } else {
             error("Unknown viewType")
