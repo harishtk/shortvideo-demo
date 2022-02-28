@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                 emptyList.isVisible = isListEmpty
                 list.isVisible = !isListEmpty
 
-                progressBar.isVisible = loadState.source.refresh is LoadState.Loading
+                progressBar.isVisible = loadState.mediator?.refresh is LoadState.Loading
                 retryButton.isVisible = loadState.source.refresh is LoadState.Error
 
                 val errorState = loadState.source.append as? LoadState.Error
@@ -178,6 +178,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (loadState.refresh is LoadState.NotLoading) {
+                    if (swipeRefresh.isRefreshing) swipeRefresh.isRefreshing = false
                     val videoUrls = adapter.snapshot().items
                         .filterIsInstance<UiModel.VideoItemModel>()
                         .map { it.videoData.file }
