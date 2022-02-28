@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Short Video Demo</string>
+    <string name="no_results">No Results</string>
+    <string name="retry">Retry</string>
+</resources>

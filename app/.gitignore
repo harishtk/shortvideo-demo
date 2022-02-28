@@ -1,0 +1,8 @@
+/build
+
+# apks
+/release
+*.aab
+*.apk
+
+outout-metadata.json
